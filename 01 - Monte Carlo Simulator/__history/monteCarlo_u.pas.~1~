@@ -1,0 +1,132 @@
+unit monteCarlo_u;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Generics.Collections;
+
+type
+  TfrmMonteCarlo = class(TForm)
+    pnlResults: TPanel;
+    lblTotalGamesHeader: TLabel;
+    lblTotalGames: TLabel;
+    pnl5: TPanel;
+    pnl6: TPanel;
+    pnl3: TPanel;
+    pnl1: TPanel;
+    pnl4: TPanel;
+    pnl2: TPanel;
+    lblBlackJack: TLabel;
+    lblBlackJackHeader: TLabel;
+    lblExactly21Header: TLabel;
+    lblExactly21: TLabel;
+    lblSameNumberHeader: TLabel;
+    lblSameNumber: TLabel;
+    lblAbove16: TLabel;
+    lblAbove16Header: TLabel;
+    lblExactly16: TLabel;
+    lblExactly16Header: TLabel;
+    lblBelow16: TLabel;
+    lblBelow16Header: TLabel;
+    btnRunSimulations: TButton;
+    lblNumberOfGames: TLabel;
+    edtNumberOfGames: TEdit;
+    pnl0: TPanel;
+    procedure btnRunSimulationsClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  frmMonteCarlo: TfrmMonteCarlo;
+
+implementation
+
+{$R *.dfm}
+
+procedure TfrmMonteCarlo.btnRunSimulationsClick(Sender: TObject);
+var
+  lCards : TList<Integer>;
+  i, j, iCardValue, iSimulations, iTotalValue, iRandom1, iRandom2 : Integer;
+  iBlackJack, iExactly21, iSameNumber, iAbove16, iExactly16, iBelow16 : Integer;
+  aSelectedCard, aCardValue : Array[1..2] of Integer;
+
+begin
+  // Initalise variables
+  Randomize;
+  lCards := TList<Integer>.Create;
+  iSimulations := StrToInt(edtNumberOfGames.Text);
+  iBlackJack := 0;
+  iExactly21 := 0;
+  iSameNumber := 0;
+  iAbove16 := 0;
+  iExactly16 := 0;
+  iBelow16 := 0;
+
+  // Create deck of cards
+  for i := 1 to 52 do
+  begin
+    iCardValue := i mod 13;
+    if iCardValue = 0 then
+      iCardValue := 13;
+    lCards.Add(iCardValue)
+  end;
+
+  // Run simulations
+  for j := 1 to iSimulations do
+  begin
+
+    // Selects two random cards
+    iRandom1 := Random(52);
+    iRandom2 := Random(52);
+    while iRandom1 = iRandom2 do
+      iRandom2 := Random(52);
+
+    aSelectedCard[1] := lCards[iRandom1];
+    aSelectedCard[2] := lCards[iRandom2];
+
+    // Calculates the values to the two cards
+    for i := 1 to 2 do
+    begin
+      Case aSelectedCard[i] of
+        1 : aCardValue[i] := 11;
+        2..10 : aCardValue[i] := aSelectedCard[i];
+        11..13 : aCardValue[i] := 10;
+      end;
+    end;
+
+    iTotalValue := aCardValue[1] + aCardValue[2];
+
+    // Increments the counters based on total value
+    Case iTotalValue of
+      1..15 : iBelow16 := iBelow16 + 1;
+      16 : iExactly16 := iExactly16 + 1;
+      17..20 : iAbove16 := iAbove16 + 1;
+      21 : iExactly21 := iExactly21 + 1;
+    End;
+
+    // Checks if the cards have the same number
+    if aSelectedCard[1] = aSelectedCard[2] then
+      iSameNumber := iSameNumber + 1;
+
+    // Checks if an ace and jack were selected
+    if ((aSelectedCard[1] = 1) and (aSelectedCard[2] = 11)) or ((aSelectedCard[2] = 1) and (aSelectedCard[1] = 11)) then
+      iBlackJack := iBlackJack + 1;
+
+  end;
+
+  // Writes the results to the labels
+  lblTotalGames.Caption := IntToStr(iSimulations);
+  lblExactly21.Caption := IntToStr(iExactly21);
+  lblAbove16.Caption := IntToStr(iAbove16);
+  lblExactly16.Caption := IntToStr(iExactly16);
+  lblBelow16.Caption := IntToStr(iBelow16);
+  lblBlackJack.Caption := IntToStr(iBlackJack);
+  lblSameNumber.Caption := IntToStr(iSameNumber);
+
+end;
+
+end.
